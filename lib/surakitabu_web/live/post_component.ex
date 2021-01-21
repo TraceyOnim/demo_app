@@ -2,7 +2,14 @@ defmodule SurakitabuWeb.PostComponent do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
+  alias Surakitabu.Post
   alias Surakitabu.Post.Account
+  alias Surakitabu.Repo
+  alias SurakitabuWeb.Router.Helpers, as: Routes
+
+  def preload(list_of_assigns) do
+    list_of_assigns |> Enum.map(fn assigns -> Map.put(assigns, :all_posts, Repo.all(Post)) end)
+  end
 
   def render(assigns) do
     ~L"""
@@ -13,9 +20,9 @@ defmodule SurakitabuWeb.PostComponent do
     <%= submit "Post", class: "btn" %>
     </form>
     </div>
-    <%= unless Enum.empty?(@posts) do %>
+    <%= unless Enum.empty?(@all_posts) do %>
     <div>
-      <%= for post <- @posts do %>
+      <%= for post <- @all_posts do %>
         <p><%= post.post %></p>
       <% end %>
     </div>
@@ -24,7 +31,8 @@ defmodule SurakitabuWeb.PostComponent do
   end
 
   def handle_event("post", params, socket) do
-    {:noreply, socket |> _save_post(params) |> push_redirect(to: "/")}
+    {:noreply,
+     socket |> _save_post(params) |> push_redirect(to: Routes.page_path(socket, :index))}
   end
 
   defp _save_post(socket, params) do
